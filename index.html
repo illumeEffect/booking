@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ILLUME Effect</title>
+
+<style>
+:root{
+  --bg1:#0b1d40;
+  --bg2:#12284f;
+  --text:#f0e6d2;
+  --accent:#d4af37;
+}
+body{
+  margin:0;
+  font-family:'Helvetica Neue',Arial,sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:var(--text);
+  text-align:center;
+  overflow-x:hidden;
+}
+.section{padding:70px 20px;max-width:1000px;margin:auto}
+h1,h2,h3{color:var(--accent)}
+
+.hero{padding:120px 20px}
+.hero img{max-width:260px;margin-bottom:25px}
+
+/* PROMOS */
+.promo-wrap{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.promo{
+  padding:20px 30px;
+  border-radius:16px;
+  font-weight:700;
+  position:relative;
+  box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+.promo.glow::before{
+  content:"";
+  position:absolute;
+  inset:-20px;
+  background:radial-gradient(circle,rgba(255,77,109,.6),transparent 70%);
+  filter:blur(22px);
+  z-index:-1;
+}
+
+/* ABOUT */
+.about{display:flex;gap:25px;justify-content:center;align-items:center;flex-wrap:wrap}
+.about img{max-width:260px;border-radius:18px;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.about-text{max-width:480px}
+
+/* SERVICES */
+.services-container{display:flex;gap:20px;overflow-x:auto;padding:20px 0}
+.service-item{min-width:260px;background:rgba(255,255,255,.06);padding:25px;border-radius:16px}
+
+/* CALENDAR */
+.calendar-wrapper{max-width:420px;margin:40px auto;background:rgba(0,0,0,.45);border-radius:20px;padding:25px}
+.calendar-header{display:flex;justify-content:space-between;align-items:center}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:15px}
+.calendar-day{font-weight:600;font-size:.8em}
+.calendar-date{padding:10px 0;background:rgba(255,255,255,.05);border-radius:10px;cursor:pointer}
+.calendar-date.selected{background:linear-gradient(135deg,#d4af37,#f3e5c5);color:#000}
+
+/* FORM */
+.service-select select{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:rgba(255,255,255,.08);color:#fff;margin-top:15px
+}
+.price-display{margin-top:10px;font-weight:700}
+
+/* TIME */
+.time-slots{display:none;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}
+.time-slot{padding:12px;border-radius:12px;background:rgba(255,255,255,.06);cursor:pointer}
+.time-slot.selected{background:var(--accent);color:#000;font-weight:700}
+.time-slot.disabled{opacity:.35;pointer-events:none}
+
+/* BUTTONS */
+.confirm-booking{margin-top:16px;width:100%;padding:14px;border:none;border-radius:14px;background:var(--accent);color:#000;font-weight:700;cursor:pointer}
+.cashapp-btn{margin-top:10px;padding:14px;border-radius:14px;background:#00d632;color:#000;font-weight:700}
+
+/* RECEIPT */
+#receipt{
+  display:none;
+  background:rgba(0,0,0,.6);
+  padding:30px;
+  border-radius:20px;
+  margin-top:30px;
+}
+
+/* FOOTER */
+.footer{padding:20px;background:rgba(0,0,0,.4);border-top:1px solid var(--accent)}
+#heartsCanvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+</style>
+</head>
+
+<body>
+
+<div class="section hero">
+  <img src="images/ILLUME EFFECT.png" alt="ILLUME Effect">
+  <h2>Luxury Loc Styling</h2>
+  <div id="promoSection" class="promo-wrap"></div>
+</div>
+
+<div class="section about">
+  <img src="images/Tyra.jpeg" alt="Tyra">
+  <div class="about-text">
+    <h2>About Tyra</h2>
+    <p>Precision loc styling with a luxury experience.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Services</h2>
+  <div class="services-container">
+    <div class="service-item">Free Consultation</div>
+    <div class="service-item">Loc Re-Twist</div>
+    <div class="service-item">Starter Locs</div>
+    <div class="service-item">Instant Locs</div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Book Your Appointment</h2>
+
+  <div class="calendar-wrapper">
+    <div class="calendar-header">
+      <button id="prevMonth">‹</button>
+      <h3 id="monthLabel"></h3>
+      <button id="nextMonth">›</button>
+    </div>
+
+    <div id="calendar" class="calendar-grid"></div>
+
+    <div class="service-select">
+      <select id="serviceType">
+        <option value="">Select Service</option>
+        <option value="Free Consult">Free Consult</option>
+        <option value="Loc Re-Twist">Loc Re-Twist</option>
+        <option value="Starter Locs">Starter Locs</option>
+        <option value="Instant Locs">Instant Locs</option>
+      </select>
+    </div>
+
+    <div id="priceDisplay" class="price-display"></div>
+    <div id="balanceDisplay" class="price-display"></div>
+
+    <div id="timeSlots" class="time-slots"></div>
+
+    <a class="cashapp-btn" href="https://cash.app/$Tyraaaa3" target="_blank">
+      Pay $10 Deposit via Cash App
+    </a>
+
+    <p>Zelle: <strong>469-386-4141</strong></p>
+
+    <button id="confirmBooking" class="confirm-booking">Confirm Booking</button>
+    <a id="smsLink" class="confirm-booking" style="background:#25D366;color:#fff">Text to Book</a>
+
+    <div id="receipt"></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Follow on Instagram</h2>
+  <iframe src="https://www.instagram.com/tyra_thats_me/embed" width="320" height="400"></iframe>
+</div>
+
+<div class="footer">© 2025 ILLUME Effect</div>
+<canvas id="heartsCanvas"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ========= SUPABASE CONFIG ========= */
+const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";   // paste your Supabase project URL
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";                // paste your Supabase anon key
+const supabase = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_ANON_KEY) ?? null;
+/* ========= SERVICES / PRICING ========= */
+const SERVICES={
+  "Free Consult":{total:0,deposit:0},
+  "Loc Re-Twist":{total:90,deposit:10},
+  "Starter Locs":{total:120,deposit:10},
+  "Instant Locs":{total:350,deposit:10}
+};
+
+const serviceSel=document.getElementById("serviceType");
+const priceDisplay=document.getElementById("priceDisplay");
+const balanceDisplay=document.getElementById("balanceDisplay");
+const receipt=document.getElementById("receipt");
+const sms=document.getElementById("smsLink");
+
+/* ========= CALENDAR ========= */
+let current=new Date(),selectedDate=null,selectedTime=null;
+const calendar=document.getElementById("calendar");
+const monthLabel=document.getElementById("monthLabel");
+const timeSlots=document.getElementById("timeSlots");
+
+const allTimes=["9:00 AM","10:30 AM","12:00 PM","1:30 PM","3:00 PM","4:30 PM"];
+
+async function getBooked(d){
+  if(!supabase||!d)return [];
+  const {data,error}=await supabase.from("bookings").select("time").eq("date",d);
+  if(error)return [];
+  return (data||[]).map(r=>r.time);
+}
+
+function renderCalendar(){
+  calendar.innerHTML="";
+  const y=current.getFullYear(),m=current.getMonth();
+  monthLabel.textContent=current.toLocaleString("default",{month:"long",year:"numeric"});
+  ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>{
+    const el=document.createElement("div");
+    el.className="calendar-day";el.textContent=d;calendar.appendChild(el);
+  });
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  for(let i=0;i<first;i++)calendar.appendChild(document.createElement("div"));
+  for(let d=1;d<=days;d++){
+    const el=document.createElement("div");
+    el.className="calendar-date";el.textContent=d;
+    el.onclick=async()=>{
+      document.querySelectorAll(".calendar-date").forEach(x=>x.classList.remove("selected"));
+      el.classList.add("selected");
+      selectedDate=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      selectedTime=null;
+      await renderTimes();
+    };
+    calendar.appendChild(el);
+  }
+}
+renderCalendar();
+prevMonth.onclick=()=>{current.setMonth(current.getMonth()-1);renderCalendar()}
+nextMonth.onclick=()=>{current.setMonth(current.getMonth()+1);renderCalendar()}
+
+/* ========= TIME RULES (FIXED) ========= */
+async function renderTimes(){
+  timeSlots.innerHTML="";
+  timeSlots.style.display="grid";
+  if(!selectedDate)return;
+
+  const day=new Date(selectedDate).getDay();
+  let allowedTimes;
+
+  // Mon–Fri → ONLY 4:30 PM
+  if(day>=1 && day<=5){
+    allowedTimes=["4:30 PM"];
+  }
+  // Sat & Sun → ALL times
+  else{
+    allowedTimes=allTimes;
+  }
+
+  const booked=await getBooked(selectedDate);
+
+  allowedTimes.forEach(t=>{
+    const el=document.createElement("div");
+    el.className="time-slot";el.textContent=t;
+
+    if(booked.includes(t)){
+      el.classList.add("disabled");
+    }else{
+      el.onclick=()=>{
+        document.querySelectorAll(".time-slot").forEach(x=>x.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedTime=t;
+        updateSMS();
+      };
+    }
+    timeSlots.appendChild(el);
+  });
+}
+
+/* ========= AUTO PRICING ========= */
+serviceSel.onchange=()=>{
+  const s=serviceSel.value;
+  if(!SERVICES[s])return;
+  const {total,deposit}=SERVICES[s];
+  const bal=total-deposit;
+  priceDisplay.textContent=total===0?"Free Consultation":`Service Total: $${total}`;
+  balanceDisplay.textContent=total===0?"":"Deposit: $10 • Balance Due After: $"+bal;
+  updateSMS();
+};
+
+function updateSMS(){
+  if(!serviceSel.value||!selectedDate||!selectedTime)return;
+  const {total,deposit}=SERVICES[serviceSel.value];
+  const bal=total-deposit;
+  sms.href=`sms:14693864141?body=${encodeURIComponent(
+    `Hi Tyra ❤️ I'd like to book a ${serviceSel.value} on ${selectedDate} at ${selectedTime}.
+Total: $${total}
+Deposit: $${deposit}
+Balance Due After: $${bal}`
+  )}`;
+}
+
+/* ========= CONFIRM + RECEIPT ========= */
+const confirmBtn=document.getElementById("confirmBooking");
+confirmBtn.onclick=async()=>{
+  if(!serviceSel.value||!selectedDate||!selectedTime){
+    alert("Please complete all selections");
+    return;
+  }
+  if(!supabase){
+    alert("Booking unavailable: Supabase not configured.");
+    return;
+  }
+  const {total,deposit}=SERVICES[serviceSel.value];
+  const balance=total-deposit;
+  confirmBtn.disabled=true;
+  try{
+    const {error}=await supabase.from("bookings").insert({
+      service:serviceSel.value,
+      date:selectedDate,
+      time:selectedTime,
+      total,
+      deposit,
+      balance
+    });
+    if(error){
+      if(error.code==="23505"){
+        alert("That time just got booked, pick another");
+        await renderTimes();
+      }else{
+        alert("Booking failed: "+error.message);
+      }
+      return;
+    }
+    receipt.style.display="block";
+    receipt.innerHTML=`
+      <h3>Booking Confirmed</h3>
+      <p><strong>Service:</strong> ${serviceSel.value}</p>
+      <p><strong>Date:</strong> ${selectedDate}</p>
+      <p><strong>Time:</strong> ${selectedTime}</p>
+      <p><strong>Total:</strong> $${total}</p>
+      <p><strong>Deposit:</strong> $10</p>
+      <p><strong>Balance Due After Service:</strong> $${total-deposit}</p>
+    `;
+    await renderTimes();
+  }finally{
+    confirmBtn.disabled=false;
+  }
+};
+
+/* ========= VALENTINE MODE ========= */
+const now=new Date();
+if(now.getFullYear()===2026 && now.getMonth()===1 && now.getDate()<=14){
+  document.documentElement.style.setProperty("--bg1","#000");
+  document.documentElement.style.setProperty("--bg2","#1a0000");
+  document.documentElement.style.setProperty("--accent","#ff4d6d");
+  document.getElementById("promoSection").innerHTML=`
+    <div class="promo glow" style="background:#c1121f;color:#fff">❤️ 1 Re-Twist $70</div>
+    <div class="promo glow" style="background:#c1121f;color:#fff">💞 2 Re-Twists $110</div>`;
+  const c=document.getElementById("heartsCanvas"),ctx=c.getContext("2d");
+  c.width=innerWidth;c.height=innerHeight;
+  let hearts=[];
+  setInterval(()=>hearts.push({x:Math.random()*c.width,y:-20,s:10+Math.random()*15,v:1+Math.random()*2}),300);
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    hearts.forEach(h=>{ctx.font=`${h.s}px serif`;ctx.fillStyle="rgba(255,77,109,.8)";ctx.fillText("❤",h.x,h.y+=h.v)});
+    hearts=hearts.filter(h=>h.y<c.height+20);
+    requestAnimationFrame(draw);
+  })();
+}
+</script>
+
+</body>
+</html>
