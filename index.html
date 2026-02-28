@@ -203,6 +203,7 @@ const calendar=document.getElementById("calendar");
 const monthLabel=document.getElementById("monthLabel");
 const timeSlots=document.getElementById("timeSlots");
 
+/* Time rules: Mon–Fri 4:30 PM only; Sat & Sun 9:00 AM – 4:30 PM */
 const weekdayTimes=["4:30 PM"];
 const weekendTimes=["9:00 AM","10:30 AM","12:00 PM","1:30 PM","3:00 PM","4:30 PM"];
 
@@ -264,7 +265,8 @@ async function renderTimes(){
   timeSlots.style.display="grid";
   if(!selectedDate)return;
 
-  const day=new Date(selectedDate).getDay();
+  const [y,m,d]=selectedDate.split("-").map(Number);
+  const day=new Date(y,m-1,d).getDay();
   let allowedTimes;
 
   if(day>=1 && day<=5){
