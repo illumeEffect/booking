@@ -7,10 +7,10 @@
 
 <style>
 :root{
-  --bg1:#fff8f4;
-  --bg2:#fceaff;
-  --text:#3b3b3b;
-  --accent:#ff9ecf;
+  --bg1:#0b1d40;
+  --bg2:#12284f;
+  --text:#f0e6d2;
+  --accent:#d4af37;
 }
 body{
   margin:0;
@@ -364,72 +364,111 @@ confirmBtn.onclick=async()=>{
   }
 };
 
-/* ========= VALENTINE MODE ========= */
-const now=new Date();
-if(now.getFullYear()===2026 && now.getMonth()===1 && now.getDate()<=14){
-  document.documentElement.style.setProperty("--bg1","#000");
-  document.documentElement.style.setProperty("--bg2","#1a0000");
-  document.documentElement.style.setProperty("--text","#f0e6d2");
-  document.documentElement.style.setProperty("--accent","#ff4d6d");
-  const valStyle=document.createElement("style");
-  valStyle.textContent=".promo.glow::before{background:radial-gradient(circle,rgba(255,77,109,.6),transparent 70%)!important}";
-  document.head.appendChild(valStyle);
-  document.getElementById("promoSection").innerHTML=`
-    <div class="promo glow" style="background:#c1121f;color:#fff">❤️ 1 Re-Twist $70</div>
-    <div class="promo glow" style="background:#c1121f;color:#fff">💞 2 Re-Twists $110</div>`;
-  const c=document.getElementById("heartsCanvas"),ctx=c.getContext("2d");
-  c.width=innerWidth;c.height=innerHeight;
-  let hearts=[];
-  setInterval(()=>hearts.push({x:Math.random()*c.width,y:-20,s:10+Math.random()*15,v:1+Math.random()*2}),300);
+/* ========= SEASONAL THEME ENGINE ========= */
+function applySeasonalTheme(){
+  const now=new Date();
+  const year=now.getFullYear();
+  const month=now.getMonth();
+  const day=now.getDate();
+  const root=document.documentElement;
+
+  function getThanksgiving(y){
+    const november=new Date(y,10,1);
+    const firstThursdayOffset=(4-november.getDay()+7)%7;
+    return new Date(y,10,1+firstThursdayOffset+21);
+  }
+  const thanksgiving=getThanksgiving(year);
+  const blackFriday=new Date(thanksgiving);
+  blackFriday.setDate(thanksgiving.getDate()+1);
+
+  if(month===2){
+    root.style.setProperty("--bg1","#fdf6ec");
+    root.style.setProperty("--bg2","#e8f7f0");
+    root.style.setProperty("--text","#3b3b3b");
+    root.style.setProperty("--accent","#7cc6a6");
+    startSpringAnimation();
+    return;
+  }
+  if(month===3&&day<=20){
+    root.style.setProperty("--bg1","#fff8f4");
+    root.style.setProperty("--bg2","#fceaff");
+    root.style.setProperty("--text","#3b3b3b");
+    root.style.setProperty("--accent","#ff9ecf");
+    startEasterAnimation();
+    return;
+  }
+  if(month===9&&day===31){
+    root.style.setProperty("--bg1","#000000");
+    root.style.setProperty("--bg2","#1a0f00");
+    root.style.setProperty("--text","#f5f5f5");
+    root.style.setProperty("--accent","#ff6a00");
+    startHalloweenAnimation();
+    return;
+  }
+  if(month===10&&day===thanksgiving.getDate()){
+    root.style.setProperty("--bg1","#5c4033");
+    root.style.setProperty("--bg2","#8b5a2b");
+    root.style.setProperty("--text","#fef6e4");
+    root.style.setProperty("--accent","#d4a373");
+    startThanksgivingAnimation();
+    return;
+  }
+  if(month===10&&day===blackFriday.getDate()){
+    root.style.setProperty("--bg1","#000000");
+    root.style.setProperty("--bg2","#111111");
+    root.style.setProperty("--text","#ffffff");
+    root.style.setProperty("--accent","#ffd700");
+    startBlackFridayAnimation();
+    return;
+  }
+  if(month===11&&day===25){
+    root.style.setProperty("--bg1","#8b0000");
+    root.style.setProperty("--bg2","#006400");
+    root.style.setProperty("--text","#fff8f0");
+    root.style.setProperty("--accent","#ffd700");
+    startChristmasAnimation();
+    return;
+  }
+  root.style.setProperty("--bg1","#0b1d40");
+  root.style.setProperty("--bg2","#12284f");
+  root.style.setProperty("--text","#f0e6d2");
+  root.style.setProperty("--accent","#d4af37");
+}
+
+function startSpringAnimation(){launchFloating("🌸","#7cc6a6");}
+function startEasterAnimation(){launchFloating("🥚","#ff9ecf");}
+function startHalloweenAnimation(){launchFloating("🎃","#ff6a00");}
+function startThanksgivingAnimation(){launchFloating("🍁","#d4a373");}
+function startBlackFridayAnimation(){launchFloating("✨","#ffd700");}
+function startChristmasAnimation(){launchFloating("❄️","#ffffff");}
+
+function launchFloating(symbol,color){
+  const c=document.getElementById("heartsCanvas");
+  const ctx=c.getContext("2d");
+  c.width=innerWidth;
+  c.height=innerHeight;
+  let particles=[];
+  setInterval(()=>{
+    particles.push({
+      x:Math.random()*c.width,
+      y:-20,
+      size:14+Math.random()*16,
+      velocity:1+Math.random()*2
+    });
+  },300);
   (function draw(){
     ctx.clearRect(0,0,c.width,c.height);
-    hearts.forEach(h=>{ctx.font=`${h.s}px serif`;ctx.fillStyle="rgba(255,77,109,.8)";ctx.fillText("❤",h.x,h.y+=h.v)});
-    hearts=hearts.filter(h=>h.y<c.height+20);
+    particles.forEach(p=>{
+      ctx.font=`${p.size}px serif`;
+      ctx.fillStyle=color;
+      ctx.fillText(symbol,p.x,p.y+=p.velocity);
+    });
+    particles=particles.filter(p=>p.y<c.height+20);
     requestAnimationFrame(draw);
   })();
 }
 
-/* ========= EASTER MODE (Apr 1–20, 2026) ========= */
-if(now.getFullYear()===2026 && now.getMonth()===3 && now.getDate()<=20){
-  const c=document.getElementById("easterCanvas"),ctx=c.getContext("2d");
-  c.width=innerWidth;c.height=innerHeight;
-  const pastelColors=["#ffb7d5","#ffd4e8","#c8e6c9","#b3e5fc","#e1bee7","#fff9c4"];
-  let items=[];
-  const types=["egg","bunny"];
-  setInterval(()=>{
-    const t=types[Math.floor(Math.random()*2)];
-    items.push({
-      x:Math.random()*c.width,
-      y:-30,
-      s:12+Math.random()*14,
-      v:0.8+Math.random()*1.5,
-      type:t,
-      color:pastelColors[Math.floor(Math.random()*pastelColors.length)]
-    });
-  },400);
-  function drawEgg(x,y,s,col){
-    ctx.save();
-    ctx.fillStyle=col;
-    ctx.beginPath();
-    ctx.ellipse(x,y,s*0.6,s*1.2,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-  }
-  (function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    items.forEach(o=>{
-      o.y+=o.v;
-      if(o.type==="egg"){
-        drawEgg(o.x,o.y,o.s,o.color);
-      }else{
-        ctx.font=`${o.s}px serif`;
-        ctx.fillText("🐰",o.x,o.y);
-      }
-    });
-    items=items.filter(o=>o.y<c.height+40);
-    requestAnimationFrame(draw);
-  })();
-}
+applySeasonalTheme();
 </script>
 
 </body>
