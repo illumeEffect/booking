@@ -7,10 +7,10 @@
 
 <style>
 :root{
-  --bg1:#0b1d40;
-  --bg2:#12284f;
-  --text:#f0e6d2;
-  --accent:#d4af37;
+  --bg1:#fff8f4;
+  --bg2:#fceaff;
+  --text:#3b3b3b;
+  --accent:#ff9ecf;
 }
 body{
   margin:0;
@@ -39,7 +39,7 @@ h1,h2,h3{color:var(--accent)}
   content:"";
   position:absolute;
   inset:-20px;
-  background:radial-gradient(circle,rgba(255,77,109,.6),transparent 70%);
+  background:radial-gradient(circle,rgba(200,180,220,.7),transparent 70%);
   filter:blur(22px);
   z-index:-1;
 }
@@ -51,37 +51,39 @@ h1,h2,h3{color:var(--accent)}
 
 /* SERVICES */
 .services-container{display:flex;gap:20px;overflow-x:auto;padding:20px 0}
-.service-item{min-width:260px;background:rgba(255,255,255,.06);padding:25px;border-radius:16px}
+.service-item{min-width:260px;background:rgba(255,255,255,.3);padding:25px;border-radius:16px;color:#3b3b3b}
 
 /* CALENDAR */
-.calendar-wrapper{max-width:420px;margin:40px auto;background:rgba(0,0,0,.45);border-radius:20px;padding:25px}
+.calendar-wrapper{max-width:420px;margin:40px auto;background:rgba(255,255,255,.35);border-radius:20px;padding:25px;box-shadow:0 8px 32px rgba(255,158,207,.2)}
 .calendar-header{display:flex;justify-content:space-between;align-items:center}
 .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:15px}
 .calendar-day{font-weight:600;font-size:.8em}
-.calendar-date{padding:10px 0;background:rgba(255,255,255,.05);border-radius:10px;cursor:pointer}
-.calendar-date.selected{background:linear-gradient(135deg,#d4af37,#f3e5c5);color:#000}
+.calendar-date{padding:10px 0;background:rgba(255,255,255,.15);border-radius:10px;cursor:pointer;transition:background .2s}
+.calendar-date.closed{background:rgba(120,100,120,.25);opacity:.5;cursor:not-allowed}
+.calendar-date.selected{background:linear-gradient(135deg,#ff9ecf,#ffb7d5);color:#3b3b3b}
 
 /* FORM */
 .service-select select{
   width:100%;padding:14px;border-radius:12px;border:none;
-  background:rgba(255,255,255,.08);color:#fff;margin-top:15px
+  background:rgba(255,255,255,.25);color:#3b3b3b;margin-top:15px
 }
 .price-display{margin-top:10px;font-weight:700}
 
 /* TIME */
 .time-slots{display:none;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}
-.time-slot{padding:12px;border-radius:12px;background:rgba(255,255,255,.06);cursor:pointer}
+.time-slot{padding:12px;border-radius:12px;background:rgba(255,255,255,.2);cursor:pointer;color:#3b3b3b}
 .time-slot.selected{background:var(--accent);color:#000;font-weight:700}
 .time-slot.disabled{opacity:.35;pointer-events:none}
 
 /* BUTTONS */
-.confirm-booking{margin-top:16px;width:100%;padding:14px;border:none;border-radius:14px;background:var(--accent);color:#000;font-weight:700;cursor:pointer}
-.cashapp-btn{margin-top:10px;padding:14px;border-radius:14px;background:#00d632;color:#000;font-weight:700}
+.confirm-booking{margin-top:16px;width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#ffb7d5,#ff9ecf);color:#3b3b3b;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(255,158,207,.4)}
+.cashapp-btn{margin-top:10px;padding:14px;border-radius:14px;background:linear-gradient(135deg,#ffd4e8,#ffb7d5);color:#3b3b3b;font-weight:700}
 
 /* RECEIPT */
 #receipt{
   display:none;
   background:rgba(0,0,0,.6);
+  color:#fff;
   padding:30px;
   border-radius:20px;
   margin-top:30px;
@@ -89,7 +91,7 @@ h1,h2,h3{color:var(--accent)}
 
 /* FOOTER */
 .footer{padding:20px;background:rgba(0,0,0,.4);border-top:1px solid var(--accent)}
-#heartsCanvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+#heartsCanvas,#easterCanvas{position:fixed;inset:0;pointer-events:none;z-index:0}
 </style>
 </head>
 
@@ -166,9 +168,17 @@ h1,h2,h3{color:var(--accent)}
 
 <div class="footer">© 2025 ILLUME Effect</div>
 <canvas id="heartsCanvas"></canvas>
+<canvas id="easterCanvas"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+/* ========= ADMIN: CLOSE MONTH ========= */
+const CLOSED_MONTHS = [
+  // Format: "YYYY-MM"
+  // Example:
+  // "2026-04"
+];
+
 /* ========= SUPABASE CONFIG ========= */
 const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";   // paste your Supabase project URL
 const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";                // paste your Supabase anon key
@@ -193,7 +203,8 @@ const calendar=document.getElementById("calendar");
 const monthLabel=document.getElementById("monthLabel");
 const timeSlots=document.getElementById("timeSlots");
 
-const allTimes=["9:00 AM","10:30 AM","12:00 PM","1:30 PM","3:00 PM","4:30 PM"];
+const weekdayTimes=["4:30 PM"];
+const weekendTimes=["9:00 AM","10:30 AM","12:00 PM","1:30 PM","3:00 PM","4:30 PM"];
 
 async function getBooked(d){
   if(!supabase||!d)return [];
@@ -205,6 +216,19 @@ async function getBooked(d){
 function renderCalendar(){
   calendar.innerHTML="";
   const y=current.getFullYear(),m=current.getMonth();
+  const monthKey=`${y}-${String(m+1).padStart(2,"0")}`;
+  const isClosed=CLOSED_MONTHS.includes(monthKey);
+
+  const existingMsg=document.getElementById("closedMonthMsg");
+  if(existingMsg)existingMsg.remove();
+  if(isClosed){
+    const msgEl=document.createElement("p");
+    msgEl.id="closedMonthMsg";
+    msgEl.style.marginBottom="15px";msgEl.style.fontWeight="700";msgEl.style.color="var(--text)";
+    msgEl.textContent="This month is fully booked.";
+    calendar.parentNode.insertBefore(msgEl,calendar);
+  }
+
   monthLabel.textContent=current.toLocaleString("default",{month:"long",year:"numeric"});
   ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>{
     const el=document.createElement("div");
@@ -215,13 +239,18 @@ function renderCalendar(){
   for(let d=1;d<=days;d++){
     const el=document.createElement("div");
     el.className="calendar-date";el.textContent=d;
-    el.onclick=async()=>{
-      document.querySelectorAll(".calendar-date").forEach(x=>x.classList.remove("selected"));
-      el.classList.add("selected");
-      selectedDate=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      selectedTime=null;
-      await renderTimes();
-    };
+    if(isClosed){
+      el.classList.add("closed");
+      el.onclick=()=>{};
+    }else{
+      el.onclick=async()=>{
+        document.querySelectorAll(".calendar-date").forEach(x=>x.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedDate=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        selectedTime=null;
+        await renderTimes();
+      };
+    }
     calendar.appendChild(el);
   }
 }
@@ -229,7 +258,7 @@ renderCalendar();
 prevMonth.onclick=()=>{current.setMonth(current.getMonth()-1);renderCalendar()}
 nextMonth.onclick=()=>{current.setMonth(current.getMonth()+1);renderCalendar()}
 
-/* ========= TIME RULES (FIXED) ========= */
+/* ========= TIME RULES ========= */
 async function renderTimes(){
   timeSlots.innerHTML="";
   timeSlots.style.display="grid";
@@ -238,13 +267,10 @@ async function renderTimes(){
   const day=new Date(selectedDate).getDay();
   let allowedTimes;
 
-  // Mon–Fri → ONLY 4:30 PM
   if(day>=1 && day<=5){
-    allowedTimes=["4:30 PM"];
-  }
-  // Sat & Sun → ALL times
-  else{
-    allowedTimes=allTimes;
+    allowedTimes=weekdayTimes;
+  }else{
+    allowedTimes=weekendTimes;
   }
 
   const booked=await getBooked(selectedDate);
@@ -343,7 +369,11 @@ const now=new Date();
 if(now.getFullYear()===2026 && now.getMonth()===1 && now.getDate()<=14){
   document.documentElement.style.setProperty("--bg1","#000");
   document.documentElement.style.setProperty("--bg2","#1a0000");
+  document.documentElement.style.setProperty("--text","#f0e6d2");
   document.documentElement.style.setProperty("--accent","#ff4d6d");
+  const valStyle=document.createElement("style");
+  valStyle.textContent=".promo.glow::before{background:radial-gradient(circle,rgba(255,77,109,.6),transparent 70%)!important}";
+  document.head.appendChild(valStyle);
   document.getElementById("promoSection").innerHTML=`
     <div class="promo glow" style="background:#c1121f;color:#fff">❤️ 1 Re-Twist $70</div>
     <div class="promo glow" style="background:#c1121f;color:#fff">💞 2 Re-Twists $110</div>`;
@@ -355,6 +385,48 @@ if(now.getFullYear()===2026 && now.getMonth()===1 && now.getDate()<=14){
     ctx.clearRect(0,0,c.width,c.height);
     hearts.forEach(h=>{ctx.font=`${h.s}px serif`;ctx.fillStyle="rgba(255,77,109,.8)";ctx.fillText("❤",h.x,h.y+=h.v)});
     hearts=hearts.filter(h=>h.y<c.height+20);
+    requestAnimationFrame(draw);
+  })();
+}
+
+/* ========= EASTER MODE (Apr 1–20, 2026) ========= */
+if(now.getFullYear()===2026 && now.getMonth()===3 && now.getDate()<=20){
+  const c=document.getElementById("easterCanvas"),ctx=c.getContext("2d");
+  c.width=innerWidth;c.height=innerHeight;
+  const pastelColors=["#ffb7d5","#ffd4e8","#c8e6c9","#b3e5fc","#e1bee7","#fff9c4"];
+  let items=[];
+  const types=["egg","bunny"];
+  setInterval(()=>{
+    const t=types[Math.floor(Math.random()*2)];
+    items.push({
+      x:Math.random()*c.width,
+      y:-30,
+      s:12+Math.random()*14,
+      v:0.8+Math.random()*1.5,
+      type:t,
+      color:pastelColors[Math.floor(Math.random()*pastelColors.length)]
+    });
+  },400);
+  function drawEgg(x,y,s,col){
+    ctx.save();
+    ctx.fillStyle=col;
+    ctx.beginPath();
+    ctx.ellipse(x,y,s*0.6,s*1.2,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  (function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    items.forEach(o=>{
+      o.y+=o.v;
+      if(o.type==="egg"){
+        drawEgg(o.x,o.y,o.s,o.color);
+      }else{
+        ctx.font=`${o.s}px serif`;
+        ctx.fillText("🐰",o.x,o.y);
+      }
+    });
+    items=items.filter(o=>o.y<c.height+40);
     requestAnimationFrame(draw);
   })();
 }
